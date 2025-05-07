@@ -35,6 +35,7 @@ const quotes = [
 
 const WIDTH = 1500;
 const HEIGHT = 600;
+const MARGIN = 120; // 120px margin on each side
 const BACKGROUND_SVG_URL = 'https://lib.notion.vip/tools/animated-notion-covers/animated-notion-cover_24.svg';
 
 export async function GET(request) {
@@ -43,7 +44,6 @@ export async function GET(request) {
     const quoteIndex = (dayOfMonth - 1) % quotes.length;
     const { text, author } = quotes[quoteIndex];
 
-    // Fetch and clean background SVG
     let backgroundSvgContent = '';
     try {
       const response = await got(BACKGROUND_SVG_URL);
@@ -52,23 +52,29 @@ export async function GET(request) {
         .replace(/<!DOCTYPE svg[^>]*>/gi, '')
         .replace(/^<svg[^>]*>/i, '')
         .replace(/<\/svg>$/i, '');
-    } catch (fetchError) {
+    } catch {
       return new Response('Error fetching background SVG', { status: 503 });
     }
 
-    // SVG with centralization and responsive text
+    // Prepare the quoted text with quotation marks
+    const quotedText = `“${text}”`;
+
+    // Calculate max text width (viewport minus margins)
+    const maxTextWidth = WIDTH - MARGIN * 2;
+
     const finalSvg = `
       <svg
         width="${WIDTH}"
         height="${HEIGHT}"
         viewBox="0 0 ${WIDTH} ${HEIGHT}"
         xmlns="http://www.w3.org/2000/svg"
+        style="max-width:100%;height:auto;display:block;"
       >
         ${backgroundSvgContent}
         <style>
           .quote-text {
-            font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
-            font-size: 5vw;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 48px;
             fill: #fff;
             font-weight: bold;
             text-anchor: middle;
@@ -78,7 +84,7 @@ export async function GET(request) {
           }
           .author-text {
             font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
-            font-size: 2.5vw;
+            font-size: 28px;
             fill: #e0e0e0;
             font-weight: normal;
             text-anchor: middle;
@@ -86,15 +92,20 @@ export async function GET(request) {
             text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
             letter-spacing: 0.2px;
           }
-          @media (max-width: 800px) {
-            .quote-text { font-size: 6vw; }
-            .author-text { font-size: 3vw; }
-          }
         </style>
         <g>
-          <!-- Centralize vertically: phrase at 48% and author at 58% -->
-          <text x="50%" y="48%" class="quote-text">${text}</text>
-          <text x="50%" y="58%" class="author-text">- ${author}</text>
+          <text
+            x="50%"
+            y="46%"
+            class="quote-text"
+            textLength="${maxTextWidth}"
+            lengthAdjust="spacingAndGlyphs"
+          >${quotedText}</text>
+          <text
+            x="50%"
+            y="58%"
+            class="author-text"
+          >- ${author}</text>
         </g>
       </svg>
     `;
@@ -106,7 +117,7 @@ export async function GET(request) {
 
     return new Response(finalSvg, { status: 200, headers });
 
-  } catch (error) {
+  } catch {
     return new Response('Error generating SVG cover.', { status: 500 });
   }
 }
