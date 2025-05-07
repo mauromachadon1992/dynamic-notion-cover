@@ -33,8 +33,8 @@ const quotes = [
   { text: "Our greatest weakness lies in giving up. The most certain way to succeed is always to try just one more time.", author: "Thomas Edison" }
 ];
 
-const NOTION_COVER_WIDTH = 1500;
-const NOTION_COVER_HEIGHT = 600;
+const WIDTH = 1500;
+const HEIGHT = 600;
 const BACKGROUND_SVG_URL = 'https://lib.notion.vip/tools/animated-notion-covers/animated-notion-cover_24.svg';
 
 export async function GET(request) {
@@ -43,6 +43,7 @@ export async function GET(request) {
     const quoteIndex = (dayOfMonth - 1) % quotes.length;
     const { text, author } = quotes[quoteIndex];
 
+    // Fetch and clean background SVG
     let backgroundSvgContent = '';
     try {
       const response = await got(BACKGROUND_SVG_URL);
@@ -55,46 +56,46 @@ export async function GET(request) {
       return new Response('Error fetching background SVG', { status: 503 });
     }
 
-    // SVG with IBM Plex Mono font from Google Fonts
+    // SVG with centralization and responsive text
     const finalSvg = `
       <svg
-        width="${NOTION_COVER_WIDTH}"
-        height="${NOTION_COVER_HEIGHT}"
-        viewBox="0 0 ${NOTION_COVER_WIDTH} ${NOTION_COVER_HEIGHT}"
+        width="${WIDTH}"
+        height="${HEIGHT}"
+        viewBox="0 0 ${WIDTH} ${HEIGHT}"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <defs>
-          <style type="text/css">
-            @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
-          </style>
-        </defs>
+        ${backgroundSvgContent}
         <style>
           .quote-text {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
             font-size: 48px;
             fill: #fff;
-            font-weight: 700;
+            font-weight: bold;
             text-anchor: middle;
             dominant-baseline: middle;
-            filter: drop-shadow(2px 2px 6px rgba(0,0,0,0.5));
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+            letter-spacing: 0.5px;
           }
           .author-text {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
             font-size: 28px;
             fill: #e0e0e0;
-            font-weight: 400;
+            font-weight: normal;
             text-anchor: middle;
             dominant-baseline: middle;
-            filter: drop-shadow(1px 1px 3px rgba(0,0,0,0.3));
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+            letter-spacing: 0.2px;
+          }
+          @media (max-width: 800px) {
+            .quote-text { font-size: 28px; }
+            .author-text { font-size: 16px; }
           }
         </style>
-        ${backgroundSvgContent}
-        <text x="50%" y="45%" class="quote-text">
-          ${escapeHtml(text)}
-        </text>
-        <text x="50%" y="58%" class="author-text">
-          - ${escapeHtml(author)}
-        </text>
+        <g>
+          <!-- Centralize vertically: phrase at 48% and author at 58% -->
+          <text x="50%" y="48%" class="quote-text">${text}</text>
+          <text x="50%" y="58%" class="author-text">- ${author}</text>
+        </g>
       </svg>
     `;
 
@@ -108,17 +109,4 @@ export async function GET(request) {
   } catch (error) {
     return new Response('Error generating SVG cover.', { status: 500 });
   }
-}
-
-// Simple HTML escape for SVG safety
-function escapeHtml(str) {
-  return str.replace(/[&<>"']/g, function (m) {
-    return ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    })[m];
-  });
 }
