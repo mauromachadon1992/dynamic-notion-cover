@@ -35,7 +35,6 @@ const quotes = [
 
 const WIDTH = 1500;
 const HEIGHT = 600;
-const MARGIN = 120; // 120px margin on each side
 const BACKGROUND_SVG_URL = 'https://lib.notion.vip/tools/animated-notion-covers/animated-notion-cover_24.svg';
 
 export async function GET(request) {
@@ -47,20 +46,15 @@ export async function GET(request) {
     let backgroundSvgContent = '';
     try {
       const response = await got(BACKGROUND_SVG_URL);
+      // Preserva elementos de animação ao limpar o SVG
       backgroundSvgContent = response.body
         .replace(/<\?xml.*?\?>/gi, '')
-        .replace(/<!DOCTYPE svg[^>]*>/gi, '')
+        .replace(/<!DOCTYPE[^>]*>/gi, '')
         .replace(/^<svg[^>]*>/i, '')
         .replace(/<\/svg>$/i, '');
     } catch {
       return new Response('Error fetching background SVG', { status: 503 });
     }
-
-    // Prepare the quoted text with quotation marks
-    const quotedText = `“${text}”`;
-
-    // Calculate max text width (viewport minus margins)
-    const maxTextWidth = WIDTH - MARGIN * 2;
 
     const finalSvg = `
       <svg
@@ -68,56 +62,52 @@ export async function GET(request) {
         height="${HEIGHT}"
         viewBox="0 0 ${WIDTH} ${HEIGHT}"
         xmlns="http://www.w3.org/2000/svg"
-        style="max-width:100%;height:auto;display:block;"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
       >
+        <!-- Incorpora conteúdo animado do SVG de fundo -->
         ${backgroundSvgContent}
+
+        <!-- Camada de texto sobreposta -->
         <style>
+          .quote-container {
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
+          }
           .quote-text {
-            font-family: 'Georgia', 'Times New Roman', serif;
-            font-size: 48px;
+            font-family: 'Georgia', serif;
+            font-size: 3.5rem;
             fill: #fff;
-            font-weight: bold;
             text-anchor: middle;
             dominant-baseline: middle;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
-            letter-spacing: 0.5px;
           }
           .author-text {
-            font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
-            font-size: 28px;
+            font-family: 'Arial', sans-serif;
+            font-size: 1.8rem;
             fill: #e0e0e0;
-            font-weight: normal;
             text-anchor: middle;
             dominant-baseline: middle;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
-            letter-spacing: 0.2px;
           }
         </style>
-        <g>
-          <text
-            x="50%"
-            y="46%"
-            class="quote-text"
-            textLength="${maxTextWidth}"
-            lengthAdjust="spacingAndGlyphs"
-          >${quotedText}</text>
-          <text
-            x="50%"
-            y="58%"
-            class="author-text"
-          >- ${author}</text>
+
+        <g class="quote-container">
+          <text x="50%" y="45%" class="quote-text">
+            “${text}”
+          </text>
+          <text x="50%" y="55%" class="author-text">
+            - ${author}
+          </text>
         </g>
       </svg>
     `;
 
-    const headers = {
-      'Content-Type': 'image/svg+xml',
-      'Cache-Control': 's-maxage=3600, stale-while-revalidate',
-    };
+    return new Response(finalSvg, {
+      status: 200,
+      headers: {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'public, max-age=3600'
+      }
+    });
 
-    return new Response(finalSvg, { status: 200, headers });
-
-  } catch {
-    return new Response('Error generating SVG cover.', { status: 500 });
+  } catch (error) {
+    return new Response('Error generating cover', { status: 500 });
   }
 }
