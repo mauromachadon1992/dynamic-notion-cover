@@ -65,26 +65,32 @@ export async function GET(request) {
         xmlns:xlink="http://www.w3.org/1999/xlink"
       >
         <!-- Incorpora conteúdo animado do SVG de fundo -->
-        ${backgroundSvgContent}
+        ${BACKGROUND_SVG_URL}
 
-        <!-- Camada de texto sobreposta -->
         <style>
-          .quote-container {
-            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
-          }
           .quote-text {
-            font-family: 'Georgia', serif;
-            font-size: 3.5rem;
+            font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
+            font-size: 5vw;
             fill: #fff;
+            font-weight: bold;
             text-anchor: middle;
             dominant-baseline: middle;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+            letter-spacing: 0.5px;
           }
           .author-text {
-            font-family: 'Arial', sans-serif;
-            font-size: 1.8rem;
+            font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
+            font-size: 2.5vw;
             fill: #e0e0e0;
+            font-weight: normal;
             text-anchor: middle;
             dominant-baseline: middle;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+            letter-spacing: 0.2px;
+          }
+          @media (max-width: 800px) {
+            .quote-text { font-size: 4vw; }
+            .author-text { font-size: 2vw; }
           }
         </style>
 
