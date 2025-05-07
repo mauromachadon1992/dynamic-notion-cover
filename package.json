@@ -1,0 +1,17 @@
+{
+  "name": "notion-daily-cover-svg",
+  "version": "1.0.0",
+  "description": "Generates a daily motivational SVG cover for Notion.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "got": "^14.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
