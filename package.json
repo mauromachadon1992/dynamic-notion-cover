@@ -9,7 +9,7 @@
     "deploy": "vercel --prod"
   },
   "dependencies": {
-    "got": "^14.4.1"
+    "got": "^14.4.1" 
   },
   "engines": {
     "node": "20.x"
