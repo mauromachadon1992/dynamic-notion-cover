@@ -68,7 +68,7 @@ export async function GET(request) {
         <style>
           .quote-text {
             font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
-            font-size: 48px;
+            font-size: 5vw;
             fill: #fff;
             font-weight: bold;
             text-anchor: middle;
@@ -78,7 +78,7 @@ export async function GET(request) {
           }
           .author-text {
             font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif;
-            font-size: 28px;
+            font-size: 2.5vw;
             fill: #e0e0e0;
             font-weight: normal;
             text-anchor: middle;
@@ -87,8 +87,8 @@ export async function GET(request) {
             letter-spacing: 0.2px;
           }
           @media (max-width: 800px) {
-            .quote-text { font-size: 28px; }
-            .author-text { font-size: 16px; }
+            .quote-text { font-size: 6vw; }
+            .author-text { font-size: 3vw; }
           }
         </style>
         <g>
