@@ -1,7 +1,7 @@
 {
-  "name": "notion-daily-cover-svg",
+  "name": "notion-daily-cover-svg-api",
   "version": "1.0.0",
-  "description": "Generates a daily motivational SVG cover for Notion.",
+  "description": "Generates a daily motivational SVG cover for Notion using Vercel Serverless Functions.",
   "private": true,
   "type": "module",
   "scripts": {
