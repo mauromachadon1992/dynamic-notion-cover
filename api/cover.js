@@ -1,7 +1,7 @@
 import got from 'got';
 
 // Adicione sua Chave de Acesso Unsplash aqui
-const UNSPLASH_ACCESS_KEY = 'SUA_CHAVE_DE_ACESSO_UNSPLASH';
+const UNSPLASH_ACCESS_KEY = '86eg9VBIFmvbB02JZ757VeuJs3_k6ZsZlH_LsRbpWsM'; // Substitua pela sua chave real
 
 const quotes = [
   { text: "Success is liking yourself, liking what you do, and liking how you do it.", author: "Maya Angelou", keywords: "self-love,success,happiness" },
@@ -38,8 +38,6 @@ const quotes = [
 
 const NOTION_COVER_WIDTH = 1500;
 const NOTION_COVER_HEIGHT = 600;
-// const MOBILE_ASPECT_RATIO = 1170/445; // 2.63:1 -- Not directly used in this version's logic for image fetching
-// const DESKTOP_ASPECT_RATIO = 1500/600; // 2.5:1 -- Not directly used in this version's logic for image fetching
 
 export async function GET(request) {
   try {
@@ -51,25 +49,28 @@ export async function GET(request) {
 
     if (!UNSPLASH_ACCESS_KEY || UNSPLASH_ACCESS_KEY === 'SUA_CHAVE_DE_ACESSO_UNSPLASH') {
       console.warn('Chave de API Unsplash não configurada. Usando fallback para source.unsplash.com.');
+      // Fallback para o método source.unsplash.com que não requer autenticação [6]
       unsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
     } else {
       try {
-        // Buscar imagem da API Unsplash
+        // Busca uma foto aleatória da API Unsplash seguindo a documentação [2, 3, 5]
+        // Endpoint: GET /photos/random
         const response = await got('https://api.unsplash.com/photos/random', {
           searchParams: {
-            client_id: UNSPLASH_ACCESS_KEY,
-            query: keywords,
-            orientation: 'landscape', // Bom para capas
-            // content_filter: 'high', // Opcional: para filtrar imagens
+            client_id: UNSPLASH_ACCESS_KEY, // Autenticação pública via client_id [2, 3]
+            query: keywords, // Parâmetro 'query' para filtrar por palavras-chave [2, 3, 5]
+            orientation: 'landscape', // Parâmetro 'orientation' para fotos paisagem [2, 3, 5]
+            // content_filter: 'low', // Parâmetro opcional 'content_filter' (default: 'low') [2, 3, 5]
           },
           responseType: 'json',
-          timeout: { // Adicionar timeout para a requisição
-            request: 10000 // 10 segundos
+          timeout: {
+            request: 10000 // Timeout de 10 segundos
           }
         });
 
         if (response.body && response.body.urls && response.body.urls.raw) {
-          // Usar .raw e adicionar parâmetros de redimensionamento/corte para controle preciso
+          // Utiliza a URL 'raw' para redimensionamento dinâmico conforme a documentação [2, 3]
+          // Anexa parâmetros Imgix para w, h, fit, crop, fm, q
           unsplashImageUrl = `${response.body.urls.raw}&w=${NOTION_COVER_WIDTH}&h=${NOTION_COVER_HEIGHT}&fit=crop&crop=entropy&fm=jpg&q=75`;
         } else {
           console.warn('API Unsplash não retornou URL da imagem esperada. Usando fallback.');
@@ -77,7 +78,7 @@ export async function GET(request) {
         }
       } catch (apiError) {
         console.error('Erro ao buscar imagem da API Unsplash:', apiError.message);
-        // Fallback para a URL mais simples source.unsplash.com se a chamada da API falhar
+        // Fallback para a URL source.unsplash.com se a chamada da API falhar
         unsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
       }
     }
@@ -94,6 +95,7 @@ export async function GET(request) {
     const lineHeight = isMobile ? 1.2 : 1.3;
     const maxTextWidth = width * 0.8;
 
+    // O SVG é construído como antes, usando a unsplashImageUrl obtida
     const finalSvg = `
       <svg 
         width="${width}" 
