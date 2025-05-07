@@ -1,5 +1,8 @@
 import got from 'got';
 
+// Adicione sua Chave de Acesso Unsplash aqui
+const UNSPLASH_ACCESS_KEY = 'SUA_CHAVE_DE_ACESSO_UNSPLASH';
+
 const quotes = [
   { text: "Success is liking yourself, liking what you do, and liking how you do it.", author: "Maya Angelou", keywords: "self-love,success,happiness" },
   { text: "The secret to getting ahead is getting started.", author: "Mark Twain", keywords: "motivation,start,progress" },
@@ -35,8 +38,8 @@ const quotes = [
 
 const NOTION_COVER_WIDTH = 1500;
 const NOTION_COVER_HEIGHT = 600;
-const MOBILE_ASPECT_RATIO = 1170/445; // 2.63:1
-const DESKTOP_ASPECT_RATIO = 1500/600; // 2.5:1
+// const MOBILE_ASPECT_RATIO = 1170/445; // 2.63:1 -- Not directly used in this version's logic for image fetching
+// const DESKTOP_ASPECT_RATIO = 1500/600; // 2.5:1 -- Not directly used in this version's logic for image fetching
 
 export async function GET(request) {
   try {
@@ -44,19 +47,48 @@ export async function GET(request) {
     const quoteIndex = (dayOfMonth - 1) % quotes.length;
     const { text, author, keywords } = quotes[quoteIndex];
 
-    // Dynamic background image from Unsplash
-    const unsplashUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
+    let unsplashImageUrl;
+
+    if (!UNSPLASH_ACCESS_KEY || UNSPLASH_ACCESS_KEY === 'SUA_CHAVE_DE_ACESSO_UNSPLASH') {
+      console.warn('Chave de API Unsplash não configurada. Usando fallback para source.unsplash.com.');
+      unsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
+    } else {
+      try {
+        // Buscar imagem da API Unsplash
+        const response = await got('https://api.unsplash.com/photos/random', {
+          searchParams: {
+            client_id: UNSPLASH_ACCESS_KEY,
+            query: keywords,
+            orientation: 'landscape', // Bom para capas
+            // content_filter: 'high', // Opcional: para filtrar imagens
+          },
+          responseType: 'json',
+          timeout: { // Adicionar timeout para a requisição
+            request: 10000 // 10 segundos
+          }
+        });
+
+        if (response.body && response.body.urls && response.body.urls.raw) {
+          // Usar .raw e adicionar parâmetros de redimensionamento/corte para controle preciso
+          unsplashImageUrl = `${response.body.urls.raw}&w=${NOTION_COVER_WIDTH}&h=${NOTION_COVER_HEIGHT}&fit=crop&crop=entropy&fm=jpg&q=75`;
+        } else {
+          console.warn('API Unsplash não retornou URL da imagem esperada. Usando fallback.');
+          unsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
+        }
+      } catch (apiError) {
+        console.error('Erro ao buscar imagem da API Unsplash:', apiError.message);
+        // Fallback para a URL mais simples source.unsplash.com se a chamada da API falhar
+        unsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
+      }
+    }
     
-    // Fetch device type from user agent
     const userAgent = request.headers.get('user-agent') || '';
     const isMobile = /Mobile|Android|iPhone/i.test(userAgent);
 
-    // Calculate responsive dimensions
     const [width, height] = isMobile 
       ? [1170, 445] 
       : [NOTION_COVER_WIDTH, NOTION_COVER_HEIGHT];
 
-    // Text sizing logic
     const baseFontSize = isMobile ? 28 : 48;
     const authorFontSize = isMobile ? 18 : 28;
     const lineHeight = isMobile ? 1.2 : 1.3;
@@ -80,15 +112,13 @@ export async function GET(request) {
           </filter>
         </defs>
 
-        <!-- Dynamic background image -->
         <image 
-          xlink:href="${unsplashUrl}" 
+          xlink:href="${unsplashImageUrl}" 
           width="100%" 
           height="100%"
           preserveAspectRatio="xMidYMid slice"
         />
 
-        <!-- Text container with responsive positioning -->
         <g transform="translate(${width/2}, ${height/2})">
           <foreignObject 
             width="${maxTextWidth}" 
@@ -120,13 +150,13 @@ export async function GET(request) {
     return new Response(finalSvg, {
       headers: {
         'Content-Type': 'image/svg+xml',
-        'Cache-Control': `public, max-age=${60*60*6}`, // 6 hour cache
+        'Cache-Control': `public, max-age=${60*60*6}`, // Cache de 6 horas
       },
       status: 200
     });
 
   } catch (error) {
-    console.error('Error generating cover:', error);
-    return new Response('Error generating cover image', { status: 500 });
+    console.error('Erro ao gerar capa:', error);
+    return new Response('Erro ao gerar imagem de capa', { status: 500 });
   }
 }
