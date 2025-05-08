@@ -49,28 +49,22 @@ export async function GET(request) {
 
     if (!UNSPLASH_ACCESS_KEY || UNSPLASH_ACCESS_KEY === 'SUA_CHAVE_DE_ACESSO_UNSPLASH') {
       console.warn('Chave de API Unsplash não configurada. Usando fallback para source.unsplash.com.');
-      // Fallback para o método source.unsplash.com que não requer autenticação [6]
       unsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
     } else {
       try {
-        // Busca uma foto aleatória da API Unsplash seguindo a documentação [2, 3, 5]
-        // Endpoint: GET /photos/random
         const response = await got('https://api.unsplash.com/photos/random', {
           searchParams: {
-            client_id: UNSPLASH_ACCESS_KEY, // Autenticação pública via client_id [2, 3]
-            query: keywords, // Parâmetro 'query' para filtrar por palavras-chave [2, 3, 5]
-            orientation: 'landscape', // Parâmetro 'orientation' para fotos paisagem [2, 3, 5]
-            // content_filter: 'low', // Parâmetro opcional 'content_filter' (default: 'low') [2, 3, 5]
+            client_id: UNSPLASH_ACCESS_KEY,
+            query: keywords,
+            orientation: 'landscape',
           },
           responseType: 'json',
           timeout: {
-            request: 10000 // Timeout de 10 segundos
+            request: 10000 
           }
         });
 
         if (response.body && response.body.urls && response.body.urls.raw) {
-          // Utiliza a URL 'raw' para redimensionamento dinâmico conforme a documentação [2, 3]
-          // Anexa parâmetros Imgix para w, h, fit, crop, fm, q
           unsplashImageUrl = `${response.body.urls.raw}&w=${NOTION_COVER_WIDTH}&h=${NOTION_COVER_HEIGHT}&fit=crop&crop=entropy&fm=jpg&q=75`;
         } else {
           console.warn('API Unsplash não retornou URL da imagem esperada. Usando fallback.');
@@ -78,11 +72,13 @@ export async function GET(request) {
         }
       } catch (apiError) {
         console.error('Erro ao buscar imagem da API Unsplash:', apiError.message);
-        // Fallback para a URL source.unsplash.com se a chamada da API falhar
         unsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
       }
     }
     
+    // Escapar ampersands na URL para uso em atributos XML/SVG
+    const escapedUnsplashImageUrl = unsplashImageUrl.replace(/&/g, '&amp;');
+
     const userAgent = request.headers.get('user-agent') || '';
     const isMobile = /Mobile|Android|iPhone/i.test(userAgent);
 
@@ -95,7 +91,6 @@ export async function GET(request) {
     const lineHeight = isMobile ? 1.2 : 1.3;
     const maxTextWidth = width * 0.8;
 
-    // O SVG é construído como antes, usando a unsplashImageUrl obtida
     const finalSvg = `
       <svg 
         width="${width}" 
@@ -115,7 +110,7 @@ export async function GET(request) {
         </defs>
 
         <image 
-          xlink:href="${unsplashImageUrl}" 
+          xlink:href="${escapedUnsplashImageUrl}" 
           width="100%" 
           height="100%"
           preserveAspectRatio="xMidYMid slice"
@@ -152,7 +147,7 @@ export async function GET(request) {
     return new Response(finalSvg, {
       headers: {
         'Content-Type': 'image/svg+xml',
-        'Cache-Control': `public, max-age=${60*60*6}`, // Cache de 6 horas
+        'Cache-Control': `public, max-age=${60*60*6}`, 
       },
       status: 200
     });
