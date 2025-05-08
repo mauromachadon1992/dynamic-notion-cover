@@ -1,9 +1,11 @@
 import got from 'got';
 
-// Adicione sua Chave de Acesso Unsplash aqui
-const UNSPLASH_ACCESS_KEY = '86eg9VBIFmvbB02JZ757VeuJs3_k6ZsZlH_LsRbpWsM'; // Substitua pela sua chave real
+// Ensure you replace this with your actual Unsplash Access Key
+// From your provided image, an example key is: 86eg9VBIFmvbB02JZ757VeuJs3_k6ZsZlH_LsRbpWsM
+const UNSPLASH_ACCESS_KEY = '86eg9VBIFmvbB02JZ757VeuJs3_k6ZsZlH_LsRbpWsM'; 
 
 const quotes = [
+  // Your existing quotes array...
   { text: "Success is liking yourself, liking what you do, and liking how you do it.", author: "Maya Angelou", keywords: "self-love,success,happiness" },
   { text: "The secret to getting ahead is getting started.", author: "Mark Twain", keywords: "motivation,start,progress" },
   { text: "I’m not telling you it’s going to be easy. I’m telling you it’s going to be worth it.", author: "Art Williams", keywords: "perseverance,challenge,worth" },
@@ -44,6 +46,7 @@ export async function GET(request) {
     const dayOfMonth = new Date().getDate();
     const quoteIndex = (dayOfMonth - 1) % quotes.length;
     const { text, author, keywords } = quotes[quoteIndex];
+    const plannerTitle = "Daily Spark"; // Title inspired by your example
 
     let unsplashImageUrl;
 
@@ -76,7 +79,6 @@ export async function GET(request) {
       }
     }
     
-    // Escapar ampersands na URL para uso em atributos XML/SVG
     const escapedUnsplashImageUrl = unsplashImageUrl.replace(/&/g, '&amp;');
 
     const userAgent = request.headers.get('user-agent') || '';
@@ -86,10 +88,12 @@ export async function GET(request) {
       ? [1170, 445] 
       : [NOTION_COVER_WIDTH, NOTION_COVER_HEIGHT];
 
-    const baseFontSize = isMobile ? 28 : 48;
-    const authorFontSize = isMobile ? 18 : 28;
-    const lineHeight = isMobile ? 1.2 : 1.3;
-    const maxTextWidth = width * 0.8;
+    // Adjusted font sizes for title, quote, and author
+    const titleFontSize = isMobile ? 22 : 36;
+    const baseFontSize = isMobile ? 20 : 32; // For the quote text
+    const authorFontSize = isMobile ? 16 : 24;
+    const lineHeight = isMobile ? 1.25 : 1.35;
+    const maxTextWidth = width * 0.85; // Slightly increased width for text block
 
     const finalSvg = `
       <svg 
@@ -99,16 +103,6 @@ export async function GET(request) {
         xmlns="http://www.w3.org/2000/svg"
         xmlns:xlink="http://www.w3.org/1999/xlink"
       >
-        <defs>
-          <filter id="text-background">
-            <feFlood flood-color="rgba(0,0,0,0.7)" result="bg"/>
-            <feMerge>
-              <feMergeNode in="bg"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-
         <image 
           xlink:href="${escapedUnsplashImageUrl}" 
           width="100%" 
@@ -116,27 +110,49 @@ export async function GET(request) {
           preserveAspectRatio="xMidYMid slice"
         />
 
+        <!-- Global overlay for better text readability, inspired by example CSS -->
+        <rect 
+          width="100%" 
+          height="100%" 
+          fill="rgba(0,0,0,0.4)"
+        />
+
         <g transform="translate(${width/2}, ${height/2})">
           <foreignObject 
             width="${maxTextWidth}" 
-            height="${height * 0.6}"
+            height="${height * 0.7}"
             x="-${maxTextWidth/2}" 
-            y="-${height * 0.3}"
+            y="-${height * 0.35}"
           >
             <div xmlns="http://www.w3.org/1999/xhtml"
               style="
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
                 font-family: 'Arial', sans-serif;
                 color: white;
-                font-size: ${baseFontSize}px;
-                line-height: ${lineHeight};
-                text-shadow: 0 2px 4px rgba(0,0,0,0.5);
                 text-align: center;
               ">
-              <div style="margin-bottom: 20px">“${text}”</div>
+              <div style="
+                font-size: ${titleFontSize}px;
+                font-weight: bold;
+                margin-bottom: 15px; 
+                text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+              ">${plannerTitle}</div>
+              <div style="
+                font-size: ${baseFontSize}px;
+                font-style: italic;
+                line-height: ${lineHeight};
+                margin-bottom: 10px;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+              ">“${text}”</div>
               <div style="
                 font-size: ${authorFontSize}px;
-                font-style: italic;
+                font-style: normal;
                 opacity: 0.9;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.6);
               ">- ${author}</div>
             </div>
           </foreignObject>
