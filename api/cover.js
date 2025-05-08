@@ -1,11 +1,11 @@
 import got from 'got';
 
-// Ensure you replace this with your actual Unsplash Access Key
-// From your provided image, an example key is: 86eg9VBIFmvbB02JZ757VeuJs3_k6ZsZlH_LsRbpWsM
+// Certifique-se de substituir pela sua Chave de Acesso Unsplash real
+// Exemplo da sua imagem: const UNSPLASH_ACCESS_KEY = '86eg9VBIFmvbB02JZ757VeuJs3_k6ZsZlH_LsRbpWsM';
 const UNSPLASH_ACCESS_KEY = '86eg9VBIFmvbB02JZ757VeuJs3_k6ZsZlH_LsRbpWsM'; 
 
 const quotes = [
-  // Your existing quotes array...
+  // Seu array de citações existente...
   { text: "Success is liking yourself, liking what you do, and liking how you do it.", author: "Maya Angelou", keywords: "self-love,success,happiness" },
   { text: "The secret to getting ahead is getting started.", author: "Mark Twain", keywords: "motivation,start,progress" },
   { text: "I’m not telling you it’s going to be easy. I’m telling you it’s going to be worth it.", author: "Art Williams", keywords: "perseverance,challenge,worth" },
@@ -41,18 +41,33 @@ const quotes = [
 const NOTION_COVER_WIDTH = 1500;
 const NOTION_COVER_HEIGHT = 600;
 
+async function imageUrlToDataUri(imageUrl) {
+  try {
+    const response = await got(imageUrl, { responseType: 'buffer', timeout: { request: 15000 } }); // Aumentar timeout para download da imagem
+    const imageBuffer = response.body;
+    const contentType = response.headers['content-type'] || 'image/jpeg'; // Tenta pegar o tipo de conteúdo, fallback para jpeg
+    const base64Image = imageBuffer.toString('base64');
+    return `data:${contentType};base64,${base64Image}`;
+  } catch (error) {
+    console.error('Erro ao converter imagem para Data URI:', error.message);
+    // Retornar um placeholder ou uma string vazia em caso de erro para evitar quebrar o SVG
+    // Um placeholder transparente 1x1 pode ser uma opção
+    return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='; 
+  }
+}
+
 export async function GET(request) {
   try {
     const dayOfMonth = new Date().getDate();
     const quoteIndex = (dayOfMonth - 1) % quotes.length;
     const { text, author, keywords } = quotes[quoteIndex];
-    const plannerTitle = "Daily Spark"; // Title inspired by your example
+    const plannerTitle = "Daily Spark";
 
-    let unsplashImageUrl;
+    let rawUnsplashImageUrl;
 
     if (!UNSPLASH_ACCESS_KEY || UNSPLASH_ACCESS_KEY === 'SUA_CHAVE_DE_ACESSO_UNSPLASH') {
       console.warn('Chave de API Unsplash não configurada. Usando fallback para source.unsplash.com.');
-      unsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
+      rawUnsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
     } else {
       try {
         const response = await got('https://api.unsplash.com/photos/random', {
@@ -68,18 +83,20 @@ export async function GET(request) {
         });
 
         if (response.body && response.body.urls && response.body.urls.raw) {
-          unsplashImageUrl = `${response.body.urls.raw}&w=${NOTION_COVER_WIDTH}&h=${NOTION_COVER_HEIGHT}&fit=crop&crop=entropy&fm=jpg&q=75`;
+          // Usamos fm=jpg para ter um tipo de imagem consistente (JPEG)
+          rawUnsplashImageUrl = `${response.body.urls.raw}&w=${NOTION_COVER_WIDTH}&h=${NOTION_COVER_HEIGHT}&fit=crop&crop=entropy&fm=jpg&q=75`;
         } else {
           console.warn('API Unsplash não retornou URL da imagem esperada. Usando fallback.');
-          unsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
+          rawUnsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}&fm=jpg`; // Adicionar fm=jpg ao fallback
         }
       } catch (apiError) {
         console.error('Erro ao buscar imagem da API Unsplash:', apiError.message);
-        unsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}`;
+        rawUnsplashImageUrl = `https://source.unsplash.com/random/${NOTION_COVER_WIDTH}x${NOTION_COVER_HEIGHT}/?${encodeURIComponent(keywords)}&fm=jpg`; // Adicionar fm=jpg ao fallback
       }
     }
     
-    const escapedUnsplashImageUrl = unsplashImageUrl.replace(/&/g, '&amp;');
+    // Converter a URL da imagem final para Data URI
+    const imageDataUri = await imageUrlToDataUri(rawUnsplashImageUrl);
 
     const userAgent = request.headers.get('user-agent') || '';
     const isMobile = /Mobile|Android|iPhone/i.test(userAgent);
@@ -88,12 +105,11 @@ export async function GET(request) {
       ? [1170, 445] 
       : [NOTION_COVER_WIDTH, NOTION_COVER_HEIGHT];
 
-    // Adjusted font sizes for title, quote, and author
     const titleFontSize = isMobile ? 22 : 36;
-    const baseFontSize = isMobile ? 20 : 32; // For the quote text
+    const baseFontSize = isMobile ? 20 : 32;
     const authorFontSize = isMobile ? 16 : 24;
     const lineHeight = isMobile ? 1.25 : 1.35;
-    const maxTextWidth = width * 0.85; // Slightly increased width for text block
+    const maxTextWidth = width * 0.85;
 
     const finalSvg = `
       <svg 
@@ -104,17 +120,16 @@ export async function GET(request) {
         xmlns:xlink="http://www.w3.org/1999/xlink"
       >
         <image 
-          xlink:href="${escapedUnsplashImageUrl}" 
+          xlink:href="${imageDataUri}" 
           width="100%" 
           height="100%"
           preserveAspectRatio="xMidYMid slice"
         />
 
-        <!-- Global overlay for better text readability, inspired by example CSS -->
         <rect 
           width="100%" 
           height="100%" 
-          fill="rgba(0,0,0,0.4)"
+          fill="rgba(0,0,0,0.45)"
         />
 
         <g transform="translate(${width/2}, ${height/2})">
@@ -170,6 +185,18 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Erro ao gerar capa:', error);
-    return new Response('Erro ao gerar imagem de capa', { status: 500 });
+    // Retornar um SVG de erro simples
+    const errorSvg = `
+      <svg width="1500" height="600" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="lightgrey"/>
+        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="40" fill="black">
+          Error generating cover image.
+        </text>
+      </svg>
+    `;
+    return new Response(errorSvg, { 
+      headers: { 'Content-Type': 'image/svg+xml' },
+      status: 500 
+    });
   }
 }
