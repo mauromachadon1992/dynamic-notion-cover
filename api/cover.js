@@ -2,11 +2,11 @@ import got from 'got';
 
 // Array com os caminhos das 5 imagens locais (coloque suas imagens na pasta /public/backgrounds/)
 const LOCAL_BACKGROUNDS = [
-  '1.webp',
-  '2.webp',
-  '3.webp',
-  '4.webp',
-  '5.webp'
+  'public/1.webp',
+  'public/2.webp',
+  'public/3.webp',
+  'public/4.webp',
+  'public/5.webp'
 ];
 
 const quotes = [
