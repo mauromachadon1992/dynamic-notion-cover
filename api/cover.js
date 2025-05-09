@@ -2,11 +2,11 @@ import got from 'got';
 
 // Array com os caminhos das 5 imagens locais (coloque suas imagens na pasta /public/backgrounds/)
 const LOCAL_BACKGROUNDS = [
-  'public/1.webp',
-  'public/2.webp',
-  'public/3.webp',
-  'public/4.webp',
-  'public/5.webp'
+  'https://dynamic-notion-cover.vercel.app/1.webp',
+  'https://dynamic-notion-cover.vercel.app/2.webp',
+  'https://dynamic-notion-cover.vercel.app/3.webp',
+  'https://dynamic-notion-cover.vercel.app/4.webp',
+  'https://dynamic-notion-cover.vercel.app/5.webp'
 ];
 
 const quotes = [
