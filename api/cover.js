@@ -1,12 +1,12 @@
 import got from 'got';
 
-// Array com os caminhos das 5 imagens locais (coloque suas imagens na pasta /public/backgrounds/)
+// Array com os caminhos corretos das 5 imagens
 const LOCAL_BACKGROUNDS = [
-  'https://dynamic-notion-cover.vercel.app/1.webp',
-  'https://dynamic-notion-cover.vercel.app/2.webp',
-  'https://dynamic-notion-cover.vercel.app/3.webp',
-  'https://dynamic-notion-cover.vercel.app/4.webp',
-  'https://dynamic-notion-cover.vercel.app/5.webp'
+  '/1.webp',
+  '/2.webp',
+  '/3.webp',
+  '/4.webp',
+  '/5.webp'
 ];
 
 const quotes = [
@@ -18,10 +18,16 @@ const NOTION_COVER_HEIGHT = 600;
 
 import { readFile } from 'fs/promises';
 import { extname } from 'path';
+import { join } from 'path';
 
 async function imageUrlToDataUri(imagePath) {
   try {
-    const imageBuffer = await readFile(imagePath);
+    // Remover a barra inicial para acessar corretamente o sistema de arquivos
+    const localPath = imagePath.startsWith('/') ? 
+      join(process.cwd(), 'public', imagePath) : 
+      join(process.cwd(), 'public', '/', imagePath);
+    
+    const imageBuffer = await readFile(localPath);
     // Determina o content-type pelo tipo do arquivo
     const ext = extname(imagePath).toLowerCase();
     let contentType = 'image/jpeg';
@@ -115,7 +121,7 @@ export async function GET(request) {
                 line-height: ${lineHeight};
                 margin-bottom: 10px;
                 text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-              ">“${text}”</div>
+              ">"${text}"</div>
               <div style="
                 font-size: ${authorFontSize}px;
                 font-style: normal;
