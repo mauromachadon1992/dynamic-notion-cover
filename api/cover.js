@@ -1,6 +1,7 @@
-import got from 'got';
+import { readFile } from 'fs/promises';
+import { extname, join } from 'path';
 
-// Array com os caminhos corretos das 5 imagens
+// Array with the paths of the 5 local images
 const LOCAL_BACKGROUNDS = [
   '/1.webp',
   '/2.webp',
@@ -10,52 +11,77 @@ const LOCAL_BACKGROUNDS = [
 ];
 
 const quotes = [
-  // ... Seu array de citações permanece igual ...
+  {
+    text: "The best way to predict the future is to create it.",
+    author: "Abraham Lincoln",
+    keywords: ["future", "creation"]
+  },
+  {
+    text: "Life is what happens when you're busy making other plans.",
+    author: "John Lennon",
+    keywords: ["life", "planning"]
+  },
 ];
 
 const NOTION_COVER_WIDTH = 1500;
 const NOTION_COVER_HEIGHT = 600;
 
-import { readFile } from 'fs/promises';
-import { extname } from 'path';
-import { join } from 'path';
-
-async function imageUrlToDataUri(imagePath) {
+// Function to fetch image directly from public URL instead of file system
+async function fetchImageAsDataUri(imagePath) {
   try {
-    // Remover a barra inicial para acessar corretamente o sistema de arquivos
-    const localPath = imagePath.startsWith('/') ? 
-      join(process.cwd(), 'public', imagePath) : 
-      join(process.cwd(), 'public', '/', imagePath);
+    // For Vercel deployment, we need to use the full URL
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
     
-    const imageBuffer = await readFile(localPath);
-    // Determina o content-type pelo tipo do arquivo
+    const imageUrl = `${baseUrl}${imagePath}`;
+    
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    }
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    // Determine content-type from file extension
     const ext = extname(imagePath).toLowerCase();
     let contentType = 'image/jpeg';
     if (ext === '.png') contentType = 'image/png';
     if (ext === '.webp') contentType = 'image/webp';
-    // Adicione outros tipos se necessário
-    const base64Image = imageBuffer.toString('base64');
+    
+    const base64Image = buffer.toString('base64');
     return `data:${contentType};base64,${base64Image}`;
   } catch (error) {
-    console.error('Erro ao converter imagem local para Data URI:', error.message);
-    // Placeholder transparente 1x1 pixel
+    console.error('Error converting image to Data URI:', error.message);
+    // Transparent 1x1 pixel placeholder
     return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
   }
 }
 
 export async function GET(request) {
   try {
+    // Safely calculate the quote index
     const dayOfMonth = new Date().getDate();
-    const quoteIndex = (dayOfMonth - 1) % quotes.length;
-    const { text, author, keywords } = quotes[quoteIndex];
+    // Ensure the index is within valid bounds
+    const safeQuotesLength = quotes.length || 1; // Prevent division by zero
+    const quoteIndex = ((dayOfMonth - 1) % safeQuotesLength + safeQuotesLength) % safeQuotesLength;
+    
+    // Use default values to prevent destructuring errors
+    const { 
+      text = "Daily inspiration awaits you.", 
+      author = "Daily Spark", 
+      keywords = [] 
+    } = quotes[quoteIndex] || {};
+    
     const plannerTitle = "Daily Spark";
 
-    // Seleciona a imagem local do dia
+    // Select the image of the day
     const imageIndex = (dayOfMonth - 1) % LOCAL_BACKGROUNDS.length;
     const localImagePath = LOCAL_BACKGROUNDS[imageIndex];
 
-    // Converte a imagem local para Data URI
-    const imageDataUri = await imageUrlToDataUri(localImagePath);
+    // Convert the local image to Data URI by fetching it from the public URL
+    const imageDataUri = await fetchImageAsDataUri(localImagePath);
 
     const userAgent = request.headers.get('user-agent') || '';
     const isMobile = /Mobile|Android|iPhone/i.test(userAgent);
@@ -143,7 +169,7 @@ export async function GET(request) {
     });
 
   } catch (error) {
-    console.error('Erro ao gerar capa:', error);
+    console.error('Error generating cover:', error);
     const errorSvg = `
       <svg width="1500" height="600" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="lightgrey"/>
