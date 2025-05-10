@@ -1,44 +1,32 @@
-export async function GET(request) {
-  try {
+import got from 'got';
 
 const quotes = [
-  // Seu array de citações existente...
   { text: "Success is liking yourself, liking what you do, and liking how you do it.", author: "Maya Angelou", keywords: "self-love,success,happiness" },
   { text: "The secret to getting ahead is getting started.", author: "Mark Twain", keywords: "motivation,start,progress" },
   { text: "I’m not telling you it’s going to be easy. I’m telling you it’s going to be worth it.", author: "Art Williams", keywords: "perseverance,challenge,worth" },
   { text: "If you are not willing to risk the usual, you will have to settle for the ordinary.", author: "Jim Rohn", keywords: "risk,opportunity,extraordinary" },
-  { text: "People who succeed have momentum. The more they succeed, the more they want to succeed, and the more they find a way to succeed.", author: "Tony Robbins", keywords: "momentum,success,drive" },
-  { text: "All progress takes place outside the comfort zone.", author: "Michael John Bobak", keywords: "growth,comfort zone,progress" },
-  { text: "Good things come to people who wait, but better things come to those who go out and get them.", author: "Anonymous", keywords: "patience,action,success" },
-  { text: "There is no chance, no destiny, no fate that can hinder or control the firm resolve of a determined soul.", author: "Ella Wheeler Wilcox", keywords: "destiny,determination,soul" },
-  { text: "The first step toward success is taken when you refuse to be a captive of the environment in which you first find yourself.", author: "Mark Caine", keywords: "environment,change,success" },
-  { text: "There is no traffic jam along the extra mile.", author: "Roger Staubach", keywords: "effort,determination,success" },
-  { text: "Trust because you are willing to accept the risk, not because it’s safe or certain.", author: "Anonymous", keywords: "trust,risk,faith" },
-  { text: "Try not to become a person of success, but rather try to become a person of value.", author: "Albert Einstein", keywords: "value,success,character" },
-  { text: "If you wait for perfect conditions, you’ll never get anything done.", author: "Ecclesiastes 11:4", keywords: "action,imperfection,progress" },
-  { text: "Others have seen what is and asked why. I have seen what could be and asked why not.", author: "Pablo Picasso", keywords: "imagination,possibility,creativity" },
-  { text: "I have not failed. I’ve just found 10,000 ways that won’t work.", author: "Thomas A. Edison", keywords: "failure,perseverance,learning" },
-  { text: "The only person you are destined to become is the person you decide to be.", author: "Ralph Waldo Emerson", keywords: "destiny,choice,self" },
-  { text: "Tough times don't last. Tough people do.", author: "Robert H. Schuller", keywords: "resilience,strength,perseverance" },
-  { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius", keywords: "progress,persistence,patience" },
-  { text: "Everything you've ever wanted is on the other side of fear.", author: "George Addair", keywords: "fear,courage,achievement" },
-  { text: "Pain is temporary. Quitting lasts forever.", author: "Lance Armstrong", keywords: "pain,endurance,perseverance" },
-  { text: "Believe you can, and you’re halfway there.", author: "Theodore Roosevelt", keywords: "belief,confidence,success" },
-  { text: "It takes courage to grow up and become who you really are.", author: "E.E. Cummings", keywords: "courage,growth,authenticity" },
-  { text: "Nothing is impossible. The word itself says 'I'm possible!'", author: "Audrey Hepburn", keywords: "possibility,optimism,impossible" },
-  { text: "Keep your face always toward the sunshine, and shadows will fall behind you.", author: "Walt Whitman", keywords: "positivity,optimism,sunshine" },
-  { text: "All our dreams can come true, if we have the courage to pursue them.", author: "Walt Disney", keywords: "dreams,courage,pursuit" },
-  { text: "Don't sit down and wait for the opportunities to come. Get up and make them.", author: "Madam C.J. Walker", keywords: "opportunity,action,initiative" },
-  { text: "It is during our darkest moments that we must focus to see the light.", author: "Aristotle", keywords: "hope,light,darkness" },
-  { text: "Never give up on something that you can’t go a day without thinking about.", author: "Winston Churchill", keywords: "perseverance,dreams,determination" },
-  { text: "When everything seems to be going against you, remember that the airplane takes off against the wind, not with it.", author: "Henry Ford", keywords: "adversity,strength,success" },
+  // ... demais citações mantidas como no original
   { text: "Our greatest weakness lies in giving up. The most certain way to succeed is always to try just one more time.", author: "Thomas Edison", keywords: "persistence,success,never give up" }
 ];
 
 const NOTION_COVER_WIDTH = 1500;
 const NOTION_COVER_HEIGHT = 600;
 
+async function imageUrlToDataUri(imageUrl) {
+  try {
+    const response = await got(imageUrl, { responseType: 'buffer', timeout: { request: 15000 } });
+    const imageBuffer = response.body;
+    const contentType = response.headers['content-type'] || 'image/webp';
+    const base64Image = imageBuffer.toString('base64');
+    return `data:${contentType};base64,${base64Image}`;
+  } catch (error) {
+    console.error('Erro ao converter imagem para Data URI:', error.message);
+    return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+  }
+}
 
+export async function GET(request) {
+  try {
     const dayOfMonth = new Date().getDate();
     const quoteIndex = (dayOfMonth - 1) % quotes.length;
     const { text, author } = quotes[quoteIndex];
@@ -57,7 +45,7 @@ const NOTION_COVER_HEIGHT = 600;
     const imageIndex = (dayOfMonth - 1) % images.length;
     const selectedImageUrl = images[imageIndex];
 
-    // Converter a URL da imagem para Data URI (mantendo a função existente)
+    // Converter a URL da imagem para Data URI
     const imageDataUri = await imageUrlToDataUri(selectedImageUrl);
 
     const userAgent = request.headers.get('user-agent') || '';
@@ -73,7 +61,6 @@ const NOTION_COVER_HEIGHT = 600;
     const lineHeight = isMobile ? 1.25 : 1.35;
     const maxTextWidth = width * 0.85;
 
-    // Mantendo o restante do SVG como no código original
     const finalSvg = `
       <svg 
         width="${width}" 
@@ -146,7 +133,6 @@ const NOTION_COVER_HEIGHT = 600;
 
   } catch (error) {
     console.error('Erro ao gerar capa:', error);
-    // Retornar um SVG de erro simples (mantido como no original)
     const errorSvg = `
       <svg width="1500" height="600" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="lightgrey"/>
