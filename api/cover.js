@@ -1,41 +1,3 @@
-import got from 'got';
-
-// Certifique-se de substituir pela sua Chave de Acesso Unsplash real
-const UNSPLASH_ACCESS_KEY = '86eg9VBIFmvbB02JZ757VeuJs3_k6ZsZlH_LsRbpWsM'; 
-
-const quotes = [
-  // Array de citações existente mantido sem alterações
-  { text: "Success is liking yourself, liking what you do, and liking how you do it.", author: "Maya Angelou", keywords: "self-love,success,happiness" },
-  // ... demais citações omitidas para brevidade
-];
-
-// Dimensões da capa para Notion
-const NOTION_COVER_WIDTH = 1500;
-const NOTION_COVER_HEIGHT = 600;
-
-// Array com as 5 imagens locais no diretório public/
-const localImages = [
-  '/public/1.webp',
-  '/public/2.webp',
-  '/public/3.webp',
-  '/public/4.webp',
-  '/public/5.webp'
-];
-
-async function imageUrlToDataUri(imageUrl) {
-  try {
-    const response = await got(imageUrl, { responseType: 'buffer', timeout: { request: 15000 } });
-    const imageBuffer = response.body;
-    const contentType = response.headers['content-type'] || 'image/webp';
-    const base64Image = imageBuffer.toString('base64');
-    return `data:${contentType};base64,${base64Image}`;
-  } catch (error) {
-    console.error('Erro ao converter imagem para Data URI:', error.message);
-    // Retornar um placeholder transparente 1x1 em caso de erro
-    return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='; 
-  }
-}
-
 export async function GET(request) {
   try {
     const dayOfMonth = new Date().getDate();
@@ -43,11 +5,20 @@ export async function GET(request) {
     const { text, author } = quotes[quoteIndex];
     const plannerTitle = "Daily Spark";
 
-    // Selecionar imagem com base no dia do mês (ciclo entre as 5 imagens)
-    const imageIndex = (dayOfMonth - 1) % localImages.length;
-    const selectedImageUrl = localImages[imageIndex];
+    // Array com as 5 imagens do diretório fornecido
+    const images = [
+      "https://dynamic-notion-cover.vercel.app/1.webp",
+      "https://dynamic-notion-cover.vercel.app/2.webp",
+      "https://dynamic-notion-cover.vercel.app/3.webp",
+      "https://dynamic-notion-cover.vercel.app/4.webp",
+      "https://dynamic-notion-cover.vercel.app/5.webp"
+    ];
 
-    // Converter a URL da imagem local para Data URI
+    // Selecionar a imagem com base no dia do mês (ciclado entre 0 e 4)
+    const imageIndex = (dayOfMonth - 1) % images.length;
+    const selectedImageUrl = images[imageIndex];
+
+    // Converter a URL da imagem para Data URI (mantendo a função existente)
     const imageDataUri = await imageUrlToDataUri(selectedImageUrl);
 
     const userAgent = request.headers.get('user-agent') || '';
@@ -63,6 +34,7 @@ export async function GET(request) {
     const lineHeight = isMobile ? 1.25 : 1.35;
     const maxTextWidth = width * 0.85;
 
+    // Mantendo o restante do SVG como no código original
     const finalSvg = `
       <svg 
         width="${width}" 
@@ -77,13 +49,11 @@ export async function GET(request) {
           height="100%"
           preserveAspectRatio="xMidYMid slice"
         />
-
         <rect 
           width="100%" 
           height="100%" 
           fill="rgba(0,0,0,0.45)"
         />
-
         <g transform="translate(${width/2}, ${height/2})">
           <foreignObject 
             width="${maxTextWidth}" 
@@ -137,6 +107,7 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Erro ao gerar capa:', error);
+    // Retornar um SVG de erro simples (mantido como no original)
     const errorSvg = `
       <svg width="1500" height="600" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="lightgrey"/>
