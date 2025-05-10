@@ -3,7 +3,7 @@ import got from 'got';
 const quotes = [
   { text: "Success is liking yourself, liking what you do, and liking how you do it.", author: "Maya Angelou", keywords: "self-love,success,happiness" },
   { text: "The secret to getting ahead is getting started.", author: "Mark Twain", keywords: "motivation,start,progress" },
-  { text: "I’m not telling you it’s going to be easy. I’m telling you it’s going to be worth it.", author: "Art Williams", keywords: "perseverance,challenge,worth" },
+  { text: "I'm not telling you it's going to be easy. I'm telling you it's going to be worth it.", author: "Art Williams", keywords: "perseverance,challenge,worth" },
   { text: "If you are not willing to risk the usual, you will have to settle for the ordinary.", author: "Jim Rohn", keywords: "risk,opportunity,extraordinary" },
   // ... demais citações mantidas como no original
   { text: "Our greatest weakness lies in giving up. The most certain way to succeed is always to try just one more time.", author: "Thomas Edison", keywords: "persistence,success,never give up" }
@@ -94,7 +94,7 @@ export async function GET(request) {
                 justify-content: center;
                 align-items: center;
                 height: 100%;
-                font-family: 'Arial', sans-serif;
+                font-family: 'iawriter-mono', 'Nitti', 'Menlo', 'Courier', monospace;
                 color: white;
                 text-align: center;
               ">
@@ -110,7 +110,7 @@ export async function GET(request) {
                 line-height: ${lineHeight};
                 margin-bottom: 10px;
                 text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-              ">“${text}”</div>
+              ">"${text}"</div>
               <div style="
                 font-size: ${authorFontSize}px;
                 font-style: normal;
@@ -136,7 +136,7 @@ export async function GET(request) {
     const errorSvg = `
       <svg width="1500" height="600" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="lightgrey"/>
-        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="40" fill="black">
+        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="'iawriter-mono', 'Nitti', 'Menlo', 'Courier', monospace" font-size="40" fill="black">
           Error generating cover image.
         </text>
       </svg>
