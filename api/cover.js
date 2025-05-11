@@ -5,8 +5,17 @@ const quotes = [
   { text: "The secret to getting ahead is getting started.", author: "Mark Twain", keywords: "motivation,start,progress" },
   { text: "I'm not telling you it's going to be easy. I'm telling you it's going to be worth it.", author: "Art Williams", keywords: "perseverance,challenge,worth" },
   { text: "If you are not willing to risk the usual, you will have to settle for the ordinary.", author: "Jim Rohn", keywords: "risk,opportunity,extraordinary" },
-  // ... demais citações mantidas como no original
-  { text: "Our greatest weakness lies in giving up. The most certain way to succeed is always to try just one more time.", author: "Thomas Edison", keywords: "persistence,success,never give up" }
+  { text: "Our greatest weakness lies in giving up. The most certain way to succeed is always to try just one more time.", author: "Thomas Edison", keywords: "persistence,success,never give up" },
+  { text: "The only way to do great work is to love what you do.", author: "Steve Jobs", keywords: "passion,work,success" },
+  { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson", keywords: "persistence,motivation,time" },
+  { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt", keywords: "confidence,belief,success" },
+  { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius", keywords: "perseverance,progress,patience" },
+  { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt", keywords: "dreams,hope,future" },
+  { text: "Hardships often prepare ordinary people for an extraordinary destiny.", author: "C.S. Lewis", keywords: "challenges,growth,destiny" },
+  { text: "You miss 100% of the shots you don't take.", author: "Wayne Gretzky", keywords: "opportunity,risk,action" },
+  { text: "What you get by achieving your goals is not as important as what you become by achieving your goals.", author: "Zig Ziglar", keywords: "growth,goals,transformation" },
+  { text: "I have not failed. I've just found 10,000 ways that won't work.", author: "Thomas Edison", keywords: "failure,innovation,persistence" },
+  { text: "Dream big and dare to fail.", author: "Norman Vaughan", keywords: "dreams,courage,ambition" }
 ];
 
 const NOTION_COVER_WIDTH = 1500;
