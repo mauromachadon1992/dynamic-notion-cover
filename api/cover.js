@@ -43,11 +43,11 @@ export async function GET(request) {
 
     // Array com as 5 imagens do diretório fornecido
     const images = [
-      "https://dynamic-notion-cover.vercel.app/1.webp",
-      "https://dynamic-notion-cover.vercel.app/2.webp",
-      "https://dynamic-notion-cover.vercel.app/3.webp",
-      "https://dynamic-notion-cover.vercel.app/4.webp",
-      "https://dynamic-notion-cover.vercel.app/5.webp"
+      // "https://dynamic-notion-cover.vercel.app/1.webp",
+      // "https://dynamic-notion-cover.vercel.app/2.webp",
+      // "https://dynamic-notion-cover.vercel.app/3.webp",
+      // "https://dynamic-notion-cover.vercel.app/4.webp",
+      "https://dynamic-notion-cover.vercel.app/default-background.jpg"
     ];
 
     // Selecionar a imagem com base no dia do mês (ciclado entre 0 e 4)
